@@ -1,35 +1,57 @@
 "use client";
-import React from "react";
+
+import Image from "next/image";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from "@/components/ui/sidebar";
+import { menuItems } from "@/app/(app)/menuItems";
 
 export function AppSidebar() {
   return (
-    <aside className="w-64 h-full bg-gray-50 border-r p-4">
-      <h2 className="text-lg font-semibold mb-4">Navigation</h2>
-      <nav>
-        <ul className="space-y-2">
-          <li>
-            <a href="#" className="text-sm hover:underline">
-              Dashboard
-            </a>
-          </li>
-          <li>
-            <a href="#" className="text-sm hover:underline">
-              Leads
-            </a>
-          </li>
-          <li>
-            <a href="#" className="text-sm hover:underline">
-              Contacts
-            </a>
-          </li>
-          <li>
-            <a href="#" className="text-sm hover:underline">
-              Settings
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </aside>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <div className="flex items-center px-2">
+          <Image src="/window.svg" alt="Logo" width={25} height={25} />
+          <span className="px-2 py-1 text-base font-bold tracking-tight group-data-[collapsible=icon]:hidden">
+            Vertex CRM
+          </span>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    render={<a href={item.url} />}
+                    tooltip={item.title}
+                  >
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter />
+      <SidebarRail />
+    </Sidebar>
   );
 }
 

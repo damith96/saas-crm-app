@@ -1,7 +1,10 @@
 "use client";
+
 import React from "react";
-import TopNavbar from "./top-navbar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "./app-sidebar";
+import TopNavbar from "./top-navbar";
+import { CustomSidebarProvider } from "./custom-bar";
 
 type Props = {
   children: React.ReactNode;
@@ -9,13 +12,13 @@ type Props = {
 
 export function AppLayout({ children }: Props) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <TopNavbar />
-      <div className="flex flex-1">
-        <AppSidebar />
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <TopNavbar />
         <main className="flex-1 p-6">{children}</main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 

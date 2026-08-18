@@ -1,10 +1,14 @@
 "use client";
+
 import React from "react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import { CustomeSidebarTrigger } from "./custom-bar";
 
 export function TopNavbar() {
   return (
-    <header className="w-full h-14 flex items-center justify-between px-4 bg-white border-b">
-      <div className="text-lg font-bold">Vertex CRM</div>
+    <header className="w-full h-14 flex items-center gap-2 px-4 bg-white border-b">
+      <SidebarTrigger className="-ml-1" />
       <div>
         <input
           type="search"

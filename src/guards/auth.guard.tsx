@@ -2,21 +2,24 @@
 
 import { useAuth } from "@/contexts/auth.context";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 
-export default function Home() {
+type AuthGuardProps = {
+  children: ReactNode;
+};
+
+export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
-    if (isAuthenticated) {
-      router.replace("/dashboard");
-    } else {
+    if (!isLoading && !isAuthenticated) {
       router.replace("/auth/login");
     }
   }, [isAuthenticated, isLoading, router]);
 
-  return null;
-}
+  if (isLoading) return null;
+  if (!isAuthenticated) return null;
 
+  return <>{children}</>;
+}
