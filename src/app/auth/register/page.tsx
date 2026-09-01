@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -33,74 +34,112 @@ export default function RegisterPage() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-sm">
-      <Card className="w-full">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">
-            Create an account
-          </CardTitle>
-          <CardDescription>
-            Enter your details below to get started
-          </CardDescription>
-        </CardHeader>
+    <div className="flex min-h-screen items-center justify-center bg-white px-6 py-12 lg:px-16">
+      <div className="w-full max-w-md">
+        {/* Heading */}
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
+            Create your account
+          </h1>
 
-        <CardContent className="space-y-4">
-          {/* Full name */}
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium leading-none">
-              Full name
-            </label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="John Doe"
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Get started with Vertex CRM and manage your customer relationships
+            in one place.
+          </p>
+        </div>
+
+        {/* Form */}
+        <form className="mt-8 space-y-5">
+          {/* Name */}
+          <div className="grid gap-5 sm:grid-cols-2">
+            {/* First name */}
+            <div className="space-y-2">
+              <label
+                htmlFor="firstName"
+                className="text-sm font-medium text-slate-900"
+              >
+                First name
+              </label>
+
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="John"
+                  className="h-11 pl-10"
+                  autoComplete="given-name"
+                />
+              </div>
+            </div>
+
+            {/* Last name */}
+            <div className="space-y-2">
+              <label
+                htmlFor="lastName"
+                className="text-sm font-medium text-slate-900"
+              >
+                Last name
+              </label>
+
+              <Input
+                id="lastName"
+                type="text"
+                placeholder="Doe"
+                className="h-11"
+                autoComplete="family-name"
+              />
+            </div>
           </div>
 
           {/* Email */}
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none">
-              Email
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-slate-900"
+            >
+              Work email
             </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@company.com"
+                className="h-11 pl-10"
+                autoComplete="email"
+              />
+            </div>
           </div>
 
           {/* Password */}
           <div className="space-y-2">
             <label
               htmlFor="password"
-              className="text-sm font-medium leading-none"
+              className="text-sm font-medium text-slate-900"
             >
               Password
             </label>
+
             <div className="relative">
+              <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder="Create a password"
+                className="h-11 px-10"
                 autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pr-9"
-                required
               />
+
               <button
                 type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -109,34 +148,39 @@ export default function RegisterPage() {
                 )}
               </button>
             </div>
+
+            <p className="text-xs text-muted-foreground">
+              Use at least 8 characters with a mix of letters and numbers.
+            </p>
           </div>
 
           {/* Confirm password */}
           <div className="space-y-2">
             <label
-              htmlFor="confirm-password"
-              className="text-sm font-medium leading-none"
+              htmlFor="confirmPassword"
+              className="text-sm font-medium text-slate-900"
             >
               Confirm password
             </label>
+
             <div className="relative">
+              <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
               <Input
-                id="confirm-password"
+                id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder="Confirm your password"
+                className="h-11 px-10"
                 autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`pr-9 ${passwordMismatch ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                required
               />
+
               <button
                 type="button"
-                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
                 aria-label={
                   showConfirmPassword ? "Hide password" : "Show password"
                 }
-                className="absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -145,27 +189,60 @@ export default function RegisterPage() {
                 )}
               </button>
             </div>
-            {passwordMismatch && (
-              <p className="text-xs text-red-500">Passwords do not match.</p>
-            )}
           </div>
-        </CardContent>
 
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full" type="submit" disabled={passwordMismatch}>
-            Create account
-          </Button>
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-            Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="font-medium text-zinc-900 dark:text-zinc-50 underline-offset-4 hover:underline"
+          {/* Terms */}
+          <div className="flex items-start gap-3">
+            <Checkbox id="terms" className="mt-0.5" />
+
+            <label
+              htmlFor="terms"
+              className="text-sm leading-5 text-muted-foreground"
             >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
-    </form>
+              I agree to the{" "}
+              <Link
+                href="/terms"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </label>
+          </div>
+
+          {/* Submit */}
+          <Button
+            type="submit"
+            className="h-11 w-full bg-slate-950 text-white hover:bg-slate-800"
+          >
+            Create account
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </form>
+
+        {/* Login link */}
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link
+            href="/auth/login"
+            className="font-medium text-indigo-600 hover:text-indigo-500"
+          >
+            Sign in
+          </Link>
+        </p>
+
+        {/* Footer */}
+        <p className="mt-10 text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Vertex CRM. All rights reserved.
+        </p>
+      </div>
+    </div>
   );
 }

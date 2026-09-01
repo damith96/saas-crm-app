@@ -1,119 +1,201 @@
 "use client";
 
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
+import { z } from "zod";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useAuth } from "@/contexts/auth.context";
+  Field,
+  FieldContent,
+  FieldTitle,
+  FieldDescription,
+  FieldError,
+} from "@/components/ui/field";
+
+const loginSchema = z.object({
+  email: z
+    .string({ error: "Email is required" })
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+
+  password: z.string().min(1, "Password is required"),
+
+  rememberMe: z.boolean(),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const { login } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
 
-  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    fetch("/api/login");
-    login("abcd");
-    // TODO: wire up authentication logic here
+  function onSubmit(values: LoginFormValues) {
+    console.log("Login:", values);
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-sm">
-      <Card className="w-full">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
-          <CardDescription>
-            Enter your email and password to access your account
-          </CardDescription>
-        </CardHeader>
+    <div className="flex min-h-screen items-center justify-center bg-white px-6 py-12 lg:px-16">
+      <div className="w-full max-w-md">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
+            Welcome back
+          </h1>
 
-        <CardContent className="space-y-4">
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Sign in to your Vertex CRM account.
+          </p>
+        </div>
+
+        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-5">
           {/* Email */}
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none">
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+          <Controller
+            name="email"
+            control={form.control}
+            render={({ field }) => (
+              <Field>
+                <FieldTitle>Email</FieldTitle>
+                <FieldContent>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="you@company.com"
+                      className="h-11 pl-10"
+                      autoComplete="email"
+                    />
+                  </div>
+                </FieldContent>
+                <FieldDescription />
+                <FieldError />
+              </Field>
+            )}
+          ></Controller>
+          {/* <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+
+                  <FormControl>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="you@company.com"
+                        className="h-11 pl-10"
+                        autoComplete="email"
+                      />
+                    </div>
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
 
           {/* Password */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium leading-none"
-              >
-                Password
-              </label>
-              <Link
-                href="#"
-                className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline-offset-4 hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
+          {/* <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => {
+                const showPassword =
+                  form.watch("password") &&
+                  document.activeElement?.id === "password";
 
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pr-9"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-        </CardContent>
+                return (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Password</FormLabel>
 
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full" type="submit">
+                      <Link
+                        href="/forgot-password"
+                        className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+
+                    <FormControl>
+                      <div className="relative">
+                        <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                        <Input
+                          {...field}
+                          id="password"
+                          type="password"
+                          placeholder="Enter your password"
+                          className="h-11 pl-10"
+                          autoComplete="current-password"
+                        />
+                      </div>
+                    </FormControl>
+
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            /> */}
+
+          {/* Remember me */}
+          {/* <FormField
+              control={form.control}
+              name="rememberMe"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+
+                  <FormLabel className="font-normal text-muted-foreground">
+                    Remember me
+                  </FormLabel>
+                </FormItem>
+              )}
+            /> */}
+
+          {/* Submit */}
+          <Button
+            type="submit"
+            className="h-11 w-full bg-slate-950 text-white hover:bg-slate-800"
+          >
             Sign in
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/auth/register"
-              className="font-medium text-zinc-900 dark:text-zinc-50 underline-offset-4 hover:underline"
-            >
-              Sign up
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
-    </form>
+        </form>
+
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          Don't have an account?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-indigo-600 hover:text-indigo-500"
+          >
+            Create account
+          </Link>
+        </p>
+
+        <p className="mt-10 text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Vertex CRM. All rights reserved.
+        </p>
+      </div>
+    </div>
   );
 }
