@@ -12,14 +12,15 @@ import { Input } from "@/components/ui/input";
 import {
   Field,
   FieldContent,
-  FieldTitle,
   FieldDescription,
   FieldError,
+  FieldGroup,
+  FieldLabel,
 } from "@/components/ui/field";
 
 const loginSchema = z.object({
   email: z
-    .string({ error: "Email is required" })
+    .string()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
 
@@ -58,14 +59,13 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-5">
-          {/* Email */}
-          <Controller
-            name="email"
-            control={form.control}
-            render={({ field }) => (
-              <Field>
-                <FieldTitle>Email</FieldTitle>
-                <FieldContent>
+          <FieldGroup>
+            <Controller
+              name="email"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>Email</FieldLabel>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
@@ -77,100 +77,66 @@ export default function LoginPage() {
                       autoComplete="email"
                     />
                   </div>
-                </FieldContent>
-                <FieldDescription />
-                <FieldError />
-              </Field>
-            )}
-          ></Controller>
-          {/* <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-
-                  <FormControl>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="you@company.com"
-                        className="h-11 pl-10"
-                        autoComplete="email"
-                      />
-                    </div>
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
-            /> */}
+            />
 
-          {/* Password */}
-          {/* <FormField
-              control={form.control}
+            <Controller
               name="password"
-              render={({ field }) => {
-                const showPassword =
-                  form.watch("password") &&
-                  document.activeElement?.id === "password";
-
-                return (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Password</FormLabel>
-
-                      <Link
-                        href="/forgot-password"
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
-
-                    <FormControl>
-                      <div className="relative">
-                        <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-                        <Input
-                          {...field}
-                          id="password"
-                          type="password"
-                          placeholder="Enter your password"
-                          className="h-11 pl-10"
-                          autoComplete="current-password"
-                        />
-                      </div>
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
-            /> */}
-
-          {/* Remember me */}
-          {/* <FormField
               control={form.control}
-              name="rememberMe"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
+              render={({ field, fieldState }) => (
+                <Field>
+                  <div className="flex items-center justify-between">
+                    <FieldLabel>Password</FieldLabel>
 
-                  <FormLabel className="font-normal text-muted-foreground">
-                    Remember me
-                  </FormLabel>
-                </FormItem>
+                    <Link
+                      href="/auth/forgot-password"
+                      className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+
+                  <div className="relative">
+                    <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                    <Input
+                      {...field}
+                      id="password"
+                      type="password"
+                      placeholder="Enter your password"
+                      className="h-11 pl-10"
+                      autoComplete="current-password"
+                    />
+                  </div>
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
-            /> */}
+            />
+
+            <Controller
+              name="rememberMe"
+              control={form.control}
+              render={({ field }) => (
+                <Field orientation="horizontal">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+
+                  <FieldLabel className="font-normal text-muted-foreground">
+                    Remember me
+                  </FieldLabel>
+                </Field>
+              )}
+            />
+          </FieldGroup>
 
           {/* Submit */}
           <Button
@@ -185,7 +151,7 @@ export default function LoginPage() {
         <p className="mt-8 text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
           <Link
-            href="/register"
+            href="/auth/register"
             className="font-medium text-indigo-600 hover:text-indigo-500"
           >
             Create account

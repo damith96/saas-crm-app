@@ -1,42 +1,71 @@
 "use client";
 
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import Link from "next/link";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, User } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+
+const registerSchema = z
+  .object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Enter a valid email address"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[a-zA-Z]/, "Password must contain at least one letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+    terms: z.literal(true, {
+      errorMap: () => ({ message: "You must accept the terms to continue" }),
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const passwordMismatch =
-    confirmPassword.length > 0 && password !== confirmPassword;
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      terms: undefined,
+    },
+  });
 
-  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (password !== confirmPassword) return;
-    console.log("Register submitted:", { name, email, password });
+  function onSubmit(values: RegisterFormValues) {
+    console.log("Register:", values);
     // TODO: wire up registration logic here
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-6 py-12 lg:px-16">
       <div className="w-full max-w-md">
-        {/* Heading */}
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
             Create your account
@@ -48,174 +77,210 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* Form */}
-        <form className="mt-8 space-y-5">
-          {/* Name */}
-          <div className="grid gap-5 sm:grid-cols-2">
-            {/* First name */}
-            <div className="space-y-2">
-              <label
-                htmlFor="firstName"
-                className="text-sm font-medium text-slate-900"
-              >
-                First name
-              </label>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-5">
+          <FieldGroup>
+            {/* First name & Last name */}
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Controller
+                name="firstName"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>First name</FieldLabel>
 
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="John"
-                  className="h-11 pl-10"
-                  autoComplete="given-name"
-                />
-              </div>
-            </div>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="John"
+                        className="h-11 pl-10"
+                        autoComplete="given-name"
+                      />
+                    </div>
 
-            {/* Last name */}
-            <div className="space-y-2">
-              <label
-                htmlFor="lastName"
-                className="text-sm font-medium text-slate-900"
-              >
-                Last name
-              </label>
-
-              <Input
-                id="lastName"
-                type="text"
-                placeholder="Doe"
-                className="h-11"
-                autoComplete="family-name"
-              />
-            </div>
-          </div>
-
-          {/* Email */}
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-slate-900"
-            >
-              Work email
-            </label>
-
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@company.com"
-                className="h-11 pl-10"
-                autoComplete="email"
-              />
-            </div>
-          </div>
-
-          {/* Password */}
-          <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-slate-900"
-            >
-              Password
-            </label>
-
-            <div className="relative">
-              <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Create a password"
-                className="h-11 px-10"
-                autoComplete="new-password"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
                 )}
-              </button>
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              Use at least 8 characters with a mix of letters and numbers.
-            </p>
-          </div>
-
-          {/* Confirm password */}
-          <div className="space-y-2">
-            <label
-              htmlFor="confirmPassword"
-              className="text-sm font-medium text-slate-900"
-            >
-              Confirm password
-            </label>
-
-            <div className="relative">
-              <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm your password"
-                className="h-11 px-10"
-                autoComplete="new-password"
               />
 
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
-                aria-label={
-                  showConfirmPassword ? "Hide password" : "Show password"
-                }
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
+              <Controller
+                name="lastName"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Last name</FieldLabel>
+
+                    <Input
+                      {...field}
+                      type="text"
+                      placeholder="Doe"
+                      className="h-11"
+                      autoComplete="family-name"
+                    />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
                 )}
-              </button>
+              />
             </div>
-          </div>
 
-          {/* Terms */}
-          <div className="flex items-start gap-3">
-            <Checkbox id="terms" className="mt-0.5" />
+            {/* Email */}
+            <Controller
+              name="email"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>Work email</FieldLabel>
 
-            <label
-              htmlFor="terms"
-              className="text-sm leading-5 text-muted-foreground"
-            >
-              I agree to the{" "}
-              <Link
-                href="/terms"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link
-                href="/privacy"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Privacy Policy
-              </Link>
-              .
-            </label>
-          </div>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="you@company.com"
+                      className="h-11 pl-10"
+                      autoComplete="email"
+                    />
+                  </div>
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            {/* Password */}
+            <Controller
+              name="password"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>Password</FieldLabel>
+
+                  <div className="relative">
+                    <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a password"
+                      className="h-11 px-10"
+                      autoComplete="new-password"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Use at least 8 characters with a mix of letters and numbers.
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
+
+            {/* Confirm password */}
+            <Controller
+              name="confirmPassword"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>Confirm password</FieldLabel>
+
+                  <div className="relative">
+                    <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                    <Input
+                      {...field}
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      className="h-11 px-10"
+                      autoComplete="new-password"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+                      aria-label={
+                        showConfirmPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            {/* Terms */}
+            <Controller
+              name="terms"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field orientation="horizontal">
+                  <Checkbox
+                    checked={field.value === true}
+                    onCheckedChange={field.onChange}
+                  />
+
+                  <div className="space-y-1">
+                    <FieldLabel className="font-normal text-muted-foreground">
+                      I agree to the{" "}
+                      <Link
+                        href="/terms"
+                        className="font-medium text-indigo-600 hover:text-indigo-500"
+                      >
+                        Terms of Service
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        href="/privacy"
+                        className="font-medium text-indigo-600 hover:text-indigo-500"
+                      >
+                        Privacy Policy
+                      </Link>
+                      .
+                    </FieldLabel>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </div>
+                </Field>
+              )}
+            />
+          </FieldGroup>
 
           {/* Submit */}
           <Button
@@ -227,7 +292,6 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        {/* Login link */}
         <p className="mt-8 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
@@ -238,7 +302,6 @@ export default function RegisterPage() {
           </Link>
         </p>
 
-        {/* Footer */}
         <p className="mt-10 text-center text-xs text-muted-foreground">
           © {new Date().getFullYear()} Vertex CRM. All rights reserved.
         </p>
