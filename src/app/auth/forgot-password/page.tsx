@@ -3,16 +3,39 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Mail } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+
+const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+});
+
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const form = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
 
+  function onSubmit(_values: ForgotPasswordFormValues) {
     // API integration will be added later.
     setSubmitted(true);
   }
@@ -33,30 +56,38 @@ export default function ForgotPasswordPage() {
         </div>
 
         {!submitted ? (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            {/* Email */}
-            <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-slate-900"
-              >
-                Email
-              </label>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="mt-8 space-y-5"
+          >
+            <FieldGroup>
+              {/* Email */}
+              <Controller
+                name="email"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Email</FieldLabel>
 
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="you@company.com"
-                  className="h-11 pl-10"
-                  autoComplete="email"
-                  required
-                />
-              </div>
-            </div>
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="you@company.com"
+                        className="h-11 pl-10"
+                        autoComplete="email"
+                      />
+                    </div>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
 
             <Button
               type="submit"

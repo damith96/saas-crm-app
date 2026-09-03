@@ -9,18 +9,49 @@ import {
   EyeOff,
   LockKeyhole,
 } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+
+const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[a-zA-Z]/, "Password must contain at least one letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const form = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
+  function onSubmit(_values: ResetPasswordFormValues) {
     // API integration will be added later.
     setSubmitted(true);
   }
@@ -46,7 +77,7 @@ export default function ResetPasswordPage() {
             asChild
             className="mt-8 h-11 w-full bg-slate-950 text-white hover:bg-slate-800"
           >
-            <Link href="/login">
+            <Link href="/auth/login">
               Continue to sign in
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
@@ -71,86 +102,98 @@ export default function ResetPasswordPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-          {/* New password */}
-          <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-slate-900"
-            >
-              New password
-            </label>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="mt-8 space-y-5"
+        >
+          <FieldGroup>
+            {/* New password */}
+            <Controller
+              name="password"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>New password</FieldLabel>
 
-            <div className="relative">
-              <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <div className="relative">
+                    <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
-              <Input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Create a new password"
-                className="h-11 px-10"
-                autoComplete="new-password"
-                required
-              />
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a new password"
+                      className="h-11 px-10"
+                      autoComplete="new-password"
+                    />
 
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
 
-            <p className="text-xs text-muted-foreground">
-              Use at least 8 characters with a mix of letters and numbers.
-            </p>
-          </div>
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Use at least 8 characters with a mix of letters and
+                      numbers.
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
 
-          {/* Confirm password */}
-          <div className="space-y-2">
-            <label
-              htmlFor="confirmPassword"
-              className="text-sm font-medium text-slate-900"
-            >
-              Confirm password
-            </label>
+            {/* Confirm password */}
+            <Controller
+              name="confirmPassword"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>Confirm password</FieldLabel>
 
-            <div className="relative">
-              <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <div className="relative">
+                    <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm your new password"
-                className="h-11 px-10"
-                autoComplete="new-password"
-                required
-              />
+                    <Input
+                      {...field}
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your new password"
+                      className="h-11 px-10"
+                      autoComplete="new-password"
+                    />
 
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                aria-label={
-                  showConfirmPassword ? "Hide password" : "Show password"
-                }
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+                      aria-label={
+                        showConfirmPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+          </FieldGroup>
 
           {/* Submit */}
           <Button
@@ -165,7 +208,7 @@ export default function ResetPasswordPage() {
         {/* Back to login */}
         <div className="mt-8 text-center">
           <Link
-            href="/login"
+            href="/auth/login"
             className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
           >
             Back to sign in
