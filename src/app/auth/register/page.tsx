@@ -16,6 +16,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { fi } from "zod/v4/locales";
 
 const registerSchema = z
   .object({
@@ -58,9 +59,17 @@ export default function RegisterPage() {
     },
   });
 
-  function onSubmit(values: RegisterFormValues) {
-    console.log("Register:", values);
-    // TODO: wire up registration logic here
+  function onSubmit({
+    firstName,
+    lastName,
+    email,
+    password,
+  }: RegisterFormValues) {
+    fetch("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ firstName, lastName, email, password }),
+      headers: { "Content-Type": "application/json" },
+    }).then((res) => console.log(res));
   }
 
   return (
@@ -180,7 +189,9 @@ export default function RegisterPage() {
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -194,7 +205,8 @@ export default function RegisterPage() {
                     <FieldError errors={[fieldState.error]} />
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      Use at least 8 characters with a mix of letters and numbers.
+                      Use at least 8 characters with a mix of letters and
+                      numbers.
                     </p>
                   )}
                 </Field>

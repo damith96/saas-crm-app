@@ -41,8 +41,12 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit(values: LoginFormValues) {
-    console.log("Login:", values);
+  function onSubmit({ email, password }: LoginFormValues) {
+    fetch("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+      headers: { "Content-Type": "application/json" },
+    }).then((res) => console.log(res));
   }
 
   return (
