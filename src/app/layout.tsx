@@ -4,6 +4,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import AppLayout from "@/components/app-layout";
 import { AuthProvider } from "@/contexts/auth.context";
+import { Toaster } from "sonner";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <AuthProvider>{children}</AuthProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

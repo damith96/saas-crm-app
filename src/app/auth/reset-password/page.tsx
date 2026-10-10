@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
@@ -21,6 +22,8 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import authService from "@/services/auth.service";
+import { toast } from "sonner";
 
 const resetPasswordSchema = z
   .object({
@@ -39,6 +42,9 @@ const resetPasswordSchema = z
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") ?? "";
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -51,9 +57,17 @@ export default function ResetPasswordPage() {
     },
   });
 
-  function onSubmit(_values: ResetPasswordFormValues) {
-    // API integration will be added later.
-    setSubmitted(true);
+  async function onSubmit({ password }: ResetPasswordFormValues) {
+    if (!token) {
+      toast.error("Reset link is invalid or has expired. Please request a new one.");
+      return;
+    }
+    try {
+      await authService.resetPassword({ token, password });
+      setSubmitted(true);
+    } catch {
+      toast.error("Failed to reset password. The link may have expired.");
+    }
   }
 
   if (submitted) {
@@ -144,8 +158,7 @@ export default function ResetPasswordPage() {
                     <FieldError errors={[fieldState.error]} />
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      Use at least 8 characters with a mix of letters and
-                      numbers.
+                      Use at least 8 characters with a mix of letters and numbers.
                     </p>
                   )}
                 </Field>
@@ -198,9 +211,10 @@ export default function ResetPasswordPage() {
           {/* Submit */}
           <Button
             type="submit"
+            disabled={form.formState.isSubmitting}
             className="h-11 w-full bg-slate-950 text-white hover:bg-slate-800"
           >
-            Reset password
+            {form.formState.isSubmitting ? "Resetting…" : "Reset password"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </form>

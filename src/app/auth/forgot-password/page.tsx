@@ -15,6 +15,8 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import authService from "@/services/auth.service";
+import { toast } from "sonner";
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -35,9 +37,13 @@ export default function ForgotPasswordPage() {
     },
   });
 
-  function onSubmit(_values: ForgotPasswordFormValues) {
-    // API integration will be added later.
-    setSubmitted(true);
+  async function onSubmit({ email }: ForgotPasswordFormValues) {
+    try {
+      await authService.forgotPassword({ email });
+      setSubmitted(true);
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    }
   }
 
   return (
@@ -61,7 +67,6 @@ export default function ForgotPasswordPage() {
             className="mt-8 space-y-5"
           >
             <FieldGroup>
-              {/* Email */}
               <Controller
                 name="email"
                 control={form.control}
@@ -91,9 +96,10 @@ export default function ForgotPasswordPage() {
 
             <Button
               type="submit"
+              disabled={form.formState.isSubmitting}
               className="h-11 w-full bg-slate-950 text-white hover:bg-slate-800"
             >
-              Send reset link
+              {form.formState.isSubmitting ? "Sending…" : "Send reset link"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </form>

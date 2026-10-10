@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,9 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { fi } from "zod/v4/locales";
+import { useAuth } from "@/contexts/auth.context";
+import authService from "@/services/auth.service";
+import { toast } from "sonner";
 
 const registerSchema = z
   .object({
@@ -44,6 +47,8 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -59,17 +64,20 @@ export default function RegisterPage() {
     },
   });
 
-  function onSubmit({
+  async function onSubmit({
     firstName,
     lastName,
     email,
     password,
   }: RegisterFormValues) {
-    fetch("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ firstName, lastName, email, password }),
-      headers: { "Content-Type": "application/json" },
-    }).then((res) => console.log(res));
+    try {
+      const data = await authService.register({ firstName, lastName, email, password });
+      login(data.token);
+      toast.success("Account created! Welcome to Vertex CRM.");
+      router.push("/dashboard");
+    } catch {
+      toast.error("Registration failed. Please try again.");
+    }
   }
 
   return (
@@ -189,9 +197,7 @@ export default function RegisterPage() {
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -205,8 +211,7 @@ export default function RegisterPage() {
                     <FieldError errors={[fieldState.error]} />
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      Use at least 8 characters with a mix of letters and
-                      numbers.
+                      Use at least 8 characters with a mix of letters and numbers.
                     </p>
                   )}
                 </Field>
@@ -294,12 +299,12 @@ export default function RegisterPage() {
             />
           </FieldGroup>
 
-          {/* Submit */}
           <Button
             type="submit"
+            disabled={form.formState.isSubmitting}
             className="h-11 w-full bg-slate-950 text-white hover:bg-slate-800"
           >
-            Create account
+            {form.formState.isSubmitting ? "Creating account…" : "Create account"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </form>

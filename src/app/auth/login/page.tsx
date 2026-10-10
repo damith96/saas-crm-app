@@ -4,19 +4,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
-import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { useAuth } from "@/contexts/auth.context";
+import authService from "@/services/auth.service";
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z
@@ -32,6 +34,9 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login } = useAuth();
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -41,12 +46,25 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit({ email, password }: LoginFormValues) {
-    fetch("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-      headers: { "Content-Type": "application/json" },
-    }).then((res) => console.log(res));
+  async function onSubmit({ email, password }: LoginFormValues) {
+    try {
+      const data = await authService.login({ email, password });
+      login(data.token);
+      toast.success("Welcome back!");
+      router.push("/dashboard");
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message ||
+          "Invalid email or password. Please try again.",
+      );
+      //   if (axios.isAxiosError<IErrorResponse>(error)) {
+      //   // error.response.data is your CommonResponseDTO shape
+      //   const message = error.response?.data?.message ?? "Something went wrong.";
+      //   toast.error(message);
+      // } else {
+      //   toast.error("Something went wrong.");
+      // }
+    }
   }
 
   return (
@@ -142,12 +160,12 @@ export default function LoginPage() {
             />
           </FieldGroup>
 
-          {/* Submit */}
           <Button
             type="submit"
+            disabled={form.formState.isSubmitting}
             className="h-11 w-full bg-slate-950 text-white hover:bg-slate-800"
           >
-            Sign in
+            {form.formState.isSubmitting ? "Signing in…" : "Sign in"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </form>
