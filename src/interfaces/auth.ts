@@ -23,18 +23,13 @@ export interface IResetPasswordRequest {
 }
 
 // ─── Response types ───────────────────────────────────────────────────────────
-
-export interface IAuthUser {
-  id: string;
+export interface IAuthResponse {
+  userId: number;
   firstName: string;
   lastName: string;
   email: string;
-}
-
-export interface IAuthResponse {
-  token: string;
+  accessToken: string;
   refreshToken?: string;
-  user: IAuthUser;
 }
 
 export interface IMessageResponse {

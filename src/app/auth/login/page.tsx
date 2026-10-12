@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
 
   const form = useForm<LoginFormValues>({
@@ -49,21 +50,18 @@ export default function LoginPage() {
   async function onSubmit({ email, password }: LoginFormValues) {
     try {
       const data = await authService.login({ email, password });
-      login(data.token);
-      toast.success("Welcome back!");
-      router.push("/dashboard");
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message ||
-          "Invalid email or password. Please try again.",
-      );
-      //   if (axios.isAxiosError<IErrorResponse>(error)) {
-      //   // error.response.data is your CommonResponseDTO shape
-      //   const message = error.response?.data?.message ?? "Something went wrong.";
-      //   toast.error(message);
-      // } else {
-      //   toast.error("Something went wrong.");
-      // }
+      if (data.status === "success" && data.data.accessToken) {
+        login(data.data.accessToken);
+        router.push(searchParams.get("redirect") || "/dashboard");
+      } else {
+        toast.error(data.message || "Login failed. Please try again.");
+      }
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Login failed. Please try again.";
+      toast.error(message);
     }
   }
 

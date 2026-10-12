@@ -7,22 +7,45 @@ import type {
   IAuthResponse,
   IMessageResponse,
 } from "@/interfaces/auth";
+import type { ICommonResponse } from "@/interfaces/common-response";
 
 const authService = {
   /**
    * Authenticate an existing user and receive a JWT.
    */
-  async login(data: ILoginRequest): Promise<IAuthResponse> {
-    const res = await axiosInstance.post<IAuthResponse>("/auth/login", data);
+  async login(data: ILoginRequest): Promise<ICommonResponse<IAuthResponse>> {
+    const res = await axiosInstance.post<ICommonResponse<IAuthResponse>>(
+      "/auth/login",
+      data,
+    );
     return res.data;
   },
 
   /**
    * Create a new user account.
    */
-  async register(data: IRegisterRequest): Promise<IAuthResponse> {
-    const res = await axiosInstance.post<IAuthResponse>("/auth/register", data);
+  async register(
+    data: IRegisterRequest,
+  ): Promise<ICommonResponse<IAuthResponse>> {
+    const res = await axiosInstance.post<ICommonResponse<IAuthResponse>>(
+      "/auth/register",
+      data,
+    );
     return res.data;
+  },
+
+  /**
+   * Exchange a refresh token for a new access token.
+   * Called automatically by the axios interceptor when a 401 is received
+   * on a non-auth endpoint.
+   */
+  async refreshToken(
+    refreshToken: string,
+  ): Promise<Pick<IAuthResponse, "accessToken">> {
+    const res = await axiosInstance.post<
+      ICommonResponse<Pick<IAuthResponse, "accessToken">>
+    >("/auth/refresh-token", { refreshToken });
+    return res.data.data;
   },
 
   /**
@@ -30,8 +53,8 @@ const authService = {
    */
   async forgotPassword(
     data: IForgotPasswordRequest,
-  ): Promise<IMessageResponse> {
-    const res = await axiosInstance.post<IMessageResponse>(
+  ): Promise<ICommonResponse<IMessageResponse>> {
+    const res = await axiosInstance.post<ICommonResponse<IMessageResponse>>(
       "/auth/forgot-password",
       data,
     );
@@ -41,8 +64,10 @@ const authService = {
   /**
    * Complete the password-reset flow using the token from the email link.
    */
-  async resetPassword(data: IResetPasswordRequest): Promise<IMessageResponse> {
-    const res = await axiosInstance.post<IMessageResponse>(
+  async resetPassword(
+    data: IResetPasswordRequest,
+  ): Promise<ICommonResponse<IMessageResponse>> {
+    const res = await axiosInstance.post<ICommonResponse<IMessageResponse>>(
       "/auth/reset-password",
       data,
     );

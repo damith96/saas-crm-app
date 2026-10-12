@@ -6,6 +6,11 @@ import axios, {
 import { errorInterceptor } from "@/services/interceptors/error.interceptor";
 import { IErrorResponse } from "@/interfaces/error-response";
 
+// Extend InternalAxiosRequestConfig to track whether a retry has been attempted
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 const axiosInstance = axios.create({
   baseURL: process.env.BACKEND_URL || "/api",
   timeout: 30000, // 30 seconds timeout for large datasets
@@ -24,46 +29,51 @@ axiosInstance.interceptors.request.use(
 );
 
 // Response interceptor for handling errors globally
-// axiosInstance.interceptors.response.use(
-//   (response: AxiosResponse) => response,
-//   async (error: AxiosError) => {
-//     // Check if error is due to token expiration (401 Unauthorized)
-//     if (error.response?.status === 401) {
-//       const refreshToken = localStorage.getItem("refreshToken");
+axiosInstance.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetryableRequestConfig;
+    const statusCode = error.response?.status;
 
-//       // If we have a refresh token, try to get a new access token
-//       if (refreshToken) {
-//         try {
-//           // Import auth service dynamically to avoid circular dependency
-//           const authService = await import("./auth.service").then(
-//             (module) => module.default,
-//           );
+    // Only attempt token refresh when ALL conditions are true:
+    // 1. Status is 401
+    // 2. This is not already a retry (prevents infinite loop)
+    // 3. The failing request is NOT the login endpoint itself
+    //    (a wrong password also returns 401, but there's nothing to refresh)
+    const isAuthEndpoint = originalRequest?.url?.includes("/auth/");
+    const hasRefreshToken = !!localStorage.getItem("refreshToken");
 
-//           // Try to refresh the token
-//           const refreshResult =
-//             await authService.checkHealthAndRefreshToken(refreshToken);
+    if (statusCode === 401 && !originalRequest._retry && !isAuthEndpoint && hasRefreshToken) {
+      originalRequest._retry = true;
 
-//           if (refreshResult) {
-//             // Token refreshed successfully, retry the original request
-//             const originalRequest = error.config as InternalAxiosRequestConfig;
-//             if (originalRequest.headers) {
-//               originalRequest.headers.Authorization = `Bearer ${refreshResult.token}`;
-//             }
-//             return axiosInstance(originalRequest);
-//           }
-//         } catch (refreshError) {
-//           console.error("Token refresh failed:", refreshError);
-//           // If refresh fails, redirect to login
-//           window.location.href = "/auth/login";
-//           return Promise.reject(error);
-//         }
-//       }
-//     }
+      try {
+        // Import auth service dynamically to avoid circular dependency
+        const authService = await import("./auth.service").then(
+          (module) => module.default,
+        );
 
-//     // For other errors, use the error interceptor
-//     errorInterceptor(error as AxiosError<IErrorResponse>);
-//     return Promise.reject(error);
-//   },
-// );
+        const refreshToken = localStorage.getItem("refreshToken");
+        const refreshResult = await authService.refreshToken(refreshToken!);
+
+        if (refreshResult?.accessToken) {
+          localStorage.setItem("authToken", refreshResult.accessToken);
+          originalRequest.headers.Authorization = `Bearer ${refreshResult.accessToken}`;
+          // Retry the original request with the new token
+          return axiosInstance(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh token itself failed (expired or revoked) — force logout
+        console.error("Token refresh failed:", refreshError);
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/auth/login";
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // All other errors go through the error interceptor
+    return errorInterceptor(error as AxiosError<IErrorResponse>);
+  },
+);
 
 export default axiosInstance;
