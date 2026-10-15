@@ -29,7 +29,6 @@ export interface IAuthResponse {
   lastName: string;
   email: string;
   accessToken: string;
-  refreshToken?: string;
 }
 
 export interface IMessageResponse {

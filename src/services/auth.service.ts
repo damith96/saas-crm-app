@@ -39,12 +39,10 @@ const authService = {
    * Called automatically by the axios interceptor when a 401 is received
    * on a non-auth endpoint.
    */
-  async refreshToken(
-    refreshToken: string,
-  ): Promise<Pick<IAuthResponse, "accessToken">> {
+  async refreshToken(): Promise<Pick<IAuthResponse, "accessToken">> {
     const res = await axiosInstance.post<
       ICommonResponse<Pick<IAuthResponse, "accessToken">>
-    >("/auth/refresh-token", { refreshToken });
+    >("/auth/refresh-token");
     return res.data.data;
   },
 

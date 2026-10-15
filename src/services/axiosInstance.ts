@@ -5,7 +5,6 @@ import axios, {
 } from "axios";
 import { errorInterceptor } from "@/services/interceptors/error.interceptor";
 import { IErrorResponse } from "@/interfaces/error-response";
-
 // Extend InternalAxiosRequestConfig to track whether a retry has been attempted
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -32,18 +31,21 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as RetryableRequestConfig;
     const statusCode = error.response?.status;
+    const isTokenExpired =
+      statusCode === 401 &&
+      error.response?.headers["x-token-expired"] === "true";
 
-    // Only attempt token refresh when ALL conditions are true:
-    // 1. Status is 401
-    // 2. This is not already a retry (prevents infinite loop)
-    // 3. The failing request is NOT the login endpoint itself
-    //    (a wrong password also returns 401, but there's nothing to refresh)
-    const isAuthEndpoint = originalRequest?.url?.includes("/auth/");
-    const hasRefreshToken = !!localStorage.getItem("refreshToken");
+    if (isTokenExpired) {
+      const originalRequest = error.config as RetryableRequestConfig;
 
-    if (statusCode === 401 && !originalRequest._retry && !isAuthEndpoint && hasRefreshToken) {
+      // Guard: if we already retried once, don't retry again — force logout
+      if (originalRequest._retry) {
+        localStorage.removeItem("authToken");
+        window.location.href = "/auth/login";
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       try {
@@ -52,12 +54,11 @@ axiosInstance.interceptors.response.use(
           (module) => module.default,
         );
 
-        const refreshToken = localStorage.getItem("refreshToken");
-        const refreshResult = await authService.refreshToken(refreshToken!);
+        const { accessToken } = await authService.refreshToken();
 
-        if (refreshResult?.accessToken) {
-          localStorage.setItem("authToken", refreshResult.accessToken);
-          originalRequest.headers.Authorization = `Bearer ${refreshResult.accessToken}`;
+        if (accessToken) {
+          localStorage.setItem("authToken", accessToken);
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           // Retry the original request with the new token
           return axiosInstance(originalRequest);
         }
@@ -65,7 +66,6 @@ axiosInstance.interceptors.response.use(
         // Refresh token itself failed (expired or revoked) — force logout
         console.error("Token refresh failed:", refreshError);
         localStorage.removeItem("authToken");
-        localStorage.removeItem("refreshToken");
         window.location.href = "/auth/login";
         return Promise.reject(refreshError);
       }
