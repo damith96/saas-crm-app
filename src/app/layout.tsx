@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import AppLayout from "@/components/app-layout";
 import { AuthProvider } from "@/contexts/auth.context";
 import { Toaster } from "sonner";
+import TopProgressBar from "@/components/top-progress-bar";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -28,9 +29,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <title>Vertex CRM</title>
+      </head>
       <body className="antialiased">
         <AuthProvider>{children}</AuthProvider>
-        <Toaster richColors position="top-right" />
+        <TopProgressBar />
+        <Toaster richColors />
       </body>
     </html>
   );

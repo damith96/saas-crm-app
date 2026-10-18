@@ -128,3 +128,19 @@
     @apply font-sans;
   }
 }
+
+/* NProgress overrides */
+#nprogress .bar {
+  background: #4f46e5 !important; /* indigo-600 */
+  height: 5px !important;
+}
+
+#nprogress .peg {
+  box-shadow:
+    0 0 10px #4f46e5,
+    0 0 5px #4f46e5 !important;
+}
+
+#nprogress .spinner-icon {
+  display: none; /* hide the spinner */
+}

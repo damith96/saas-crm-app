@@ -13,6 +13,7 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
 const axiosInstance = axios.create({
   baseURL: process.env.BACKEND_URL || "/api",
   timeout: 30000, // 30 seconds timeout for large datasets
+  withCredentials: true,
 });
 
 // Request interceptor for adding authorization headers

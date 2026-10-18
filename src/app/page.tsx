@@ -12,6 +12,7 @@ export default function Home() {
     if (isLoading) return;
     if (isAuthenticated) {
       router.replace("/auth/login");
+      //router.replace("/auth/dashboard");
     } else {
       router.replace("/auth/login");
     }
