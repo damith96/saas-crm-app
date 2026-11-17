@@ -59,7 +59,9 @@ export default function ResetPasswordPage() {
 
   async function onSubmit({ password }: ResetPasswordFormValues) {
     if (!token) {
-      toast.error("Reset link is invalid or has expired. Please request a new one.");
+      toast.error(
+        "Reset link is invalid or has expired. Please request a new one.",
+      );
       return;
     }
     try {
@@ -87,10 +89,7 @@ export default function ResetPasswordPage() {
             with your new password.
           </p>
 
-          <Button
-            asChild
-            className="mt-8 h-11 w-full bg-slate-950 text-white hover:bg-slate-800"
-          >
+          <Button className="mt-8 h-11 w-full bg-slate-950 text-white hover:bg-slate-800">
             <Link href="/auth/login">
               Continue to sign in
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -116,10 +115,7 @@ export default function ResetPasswordPage() {
         </div>
 
         {/* Form */}
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="mt-8 space-y-5"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-5">
           <FieldGroup>
             {/* New password */}
             <Controller
@@ -144,7 +140,9 @@ export default function ResetPasswordPage() {
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -158,7 +156,8 @@ export default function ResetPasswordPage() {
                     <FieldError errors={[fieldState.error]} />
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      Use at least 8 characters with a mix of letters and numbers.
+                      Use at least 8 characters with a mix of letters and
+                      numbers.
                     </p>
                   )}
                 </Field>

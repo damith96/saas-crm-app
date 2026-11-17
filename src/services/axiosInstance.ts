@@ -16,6 +16,15 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+// Plain axios instance used exclusively for the refresh-token call.
+// It intentionally has NO interceptors so that a failed refresh cannot
+// trigger another refresh attempt (which would cause an infinite loop).
+const axiosRefresh = axios.create({
+  baseURL: process.env.BACKEND_URL || "/api",
+  timeout: 10000,
+  withCredentials: true,
+});
+
 // Request interceptor for adding authorization headers
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -50,12 +59,27 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Import auth service dynamically to avoid circular dependency
-        const authService = await import("./auth.service").then(
-          (module) => module.default,
-        );
+        // PREVIOUS APPROACH (caused infinite loop):
+        // authService.refreshToken() uses axiosInstance, which has this same
+        // interceptor. When the expired JWT is sent with the refresh request,
+        // ASP.NET's auth middleware fires OnAuthenticationFailed and sets
+        // X-Token-Expired: true on the refresh response — which re-triggers
+        // this interceptor, causing an unlimited refresh loop.
+        //
+        // const authService = await import("./auth.service").then(
+        //   (module) => module.default,
+        // );
+        // const { accessToken } = await authService.refreshToken();
 
-        const { accessToken } = await authService.refreshToken();
+        // Use axiosRefresh (no interceptors) to avoid re-triggering this
+        // interceptor on the refresh call itself, which would cause an
+        // infinite loop when the server sets X-Token-Expired on any request
+        // that carries an expired JWT — including the refresh endpoint.
+        const refreshResponse = await axiosRefresh.post<{
+          data: { accessToken: string };
+        }>("/auth/refresh-token");
+
+        const accessToken = refreshResponse.data?.data?.accessToken;
 
         if (accessToken) {
           localStorage.setItem("authToken", accessToken);

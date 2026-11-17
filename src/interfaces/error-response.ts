@@ -1,6 +1,6 @@
 export interface IErrorResponse {
   message: string;
-  statusCode: number;
+  status: string;
 }
 
 export class ApiError extends Error {

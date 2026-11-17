@@ -11,11 +11,12 @@ import { ApiError, IErrorResponse } from "@/interfaces/error-response";
  */
 export function errorInterceptor(error: AxiosError<IErrorResponse>) {
   const statusCode = error.response?.status;
-  const errorMessage = error.response?.data?.message || error.message;
+  const errorMessage =
+    error.response?.data?.message ||
+    "An unexpected error occurred. Please try again later.";
 
   // Log the error message and status code
   console.info(`API Error: ${errorMessage} (Status Code: ${statusCode})`);
-  // toast.error(`Error: ${errorMessage}`);
 
   // Handle specific error conditions
   // if (statusCode === 401) {
